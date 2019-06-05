@@ -18,12 +18,17 @@ pub struct Bn256PoseidonParams {
 
 impl Bn256PoseidonParams {
     pub fn new<H: GroupHasher>() -> Self {
-        use byteorder::{WriteBytesExt, ReadBytesExt, BigEndian};
-        use constants;
-
         let t = 6u32;
         let r_f = 8u32;
         let r_p = 84u32;
+        let security_level = 126u32;
+
+        Self::new_for_params::<H>(t, r_f, r_p, security_level)
+    }
+
+    pub fn new_for_params<H: GroupHasher>(t: u32, r_f: u32, r_p: u32, security_level: u32) -> Self {
+        use byteorder::{WriteBytesExt, ReadBytesExt, BigEndian};
+        use constants;
 
         // generate round constants based on some seed and hashing
         let full_round_constants = {

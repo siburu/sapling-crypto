@@ -100,6 +100,11 @@ impl<E: PoseidonEngine> QuinticSBox<E> {
     }
 }
 
+// pub fn poseidon_tree_hash<E: PoseidonEngine<SBox = QuinticSBox<E> >, CS>(
+//     mut cs: CS,
+//     elements: &[AllocatedNum<E>],
+//     params: &E::Params
+
 pub fn poseidon_hash<E: PoseidonEngine<SBox = QuinticSBox<E> >, CS>(
     mut cs: CS,
     input: &[AllocatedNum<E>],
@@ -107,14 +112,9 @@ pub fn poseidon_hash<E: PoseidonEngine<SBox = QuinticSBox<E> >, CS>(
 ) -> Result<Vec<AllocatedNum<E>>, SynthesisError>
     where CS: ConstraintSystem<E>
 {
-    let output_bits = 2*params.security_level();
-    let mut output_len = (E::Fr::CAPACITY / output_bits) as usize;
-    if E::Fr::CAPACITY % output_bits != 0 && E::Fr::CAPACITY < output_bits {
-        output_len += 1;
-    }
-
+    let output_len = params.output_len() as usize;
+    let absorbtion_len = params.absorbtion_cycle_len() as usize;
     let t = params.t();
-    let absorbtion_len = (t as usize) - output_len;
 
     let mut absorbtion_cycles = input.len() / absorbtion_len;
     if input.len() % absorbtion_len != 0 {

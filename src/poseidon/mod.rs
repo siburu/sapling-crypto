@@ -101,6 +101,21 @@ pub trait PoseidonHashParams<E: Engine>: Sized {
     fn partial_round_key(&self, round: u32) -> &[E::Fr];
     fn mds_matrix_row(&self, row: u32) -> &[E::Fr];
     fn security_level(&self) -> u32;
+    fn output_len(&self) -> u32 {
+        let output_bits = 2 * self.security_level();
+        let mut output_len = E::Fr::CAPACITY / output_bits;
+        if E::Fr::CAPACITY % output_bits != 0 && E::Fr::CAPACITY < output_bits {
+            output_len += 1;
+        }
+
+        output_len
+    }
+    fn absorbtion_cycle_len(&self) -> u32 {
+        self.t() - self.output_len()
+    }
+    fn compression_rate(&self) -> u32 {
+        self.absorbtion_cycle_len() / self.output_len()
+    }
 }
 
 pub trait PoseidonEngine: Engine {
@@ -112,16 +127,12 @@ pub fn poseidon_hash<E: PoseidonEngine>(
     params: &E::Params,
     input: &[E::Fr]
 ) -> Vec<E::Fr> {
-    let output_bits = 2*params.security_level();
-    let mut output_len = (E::Fr::CAPACITY / output_bits) as usize;
-    if E::Fr::CAPACITY % output_bits != 0 && E::Fr::CAPACITY < output_bits {
-        output_len += 1;
-    }
-
+    let output_len = params.output_len() as usize;
+    let absorbtion_len = params.absorbtion_cycle_len() as usize;
     let t = params.t();
-    let absorbtion_len = (t as usize) - output_len;
 
     let mut input = input.to_vec();
+
     let mut absorbtion_cycles = input.len() / absorbtion_len;
     if input.len() % absorbtion_len != 0 {
         absorbtion_cycles += 1;
