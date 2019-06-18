@@ -487,6 +487,122 @@ impl<E: Engine> AllocatedNum<E> {
         Ok(())
     }
 
+    /// Takes two allocated numbers (a, b) and returns
+    /// allocated boolean variable with value `true`
+    /// if the `a` and `b` are equal, `false` otherwise.
+    pub fn equals<CS>(
+        mut cs: CS,
+        a: &Self,
+        b: &Self
+    ) -> Result<boolean::Boolean, SynthesisError>
+        where E: Engine,
+            CS: ConstraintSystem<E>
+    {
+        // Allocate and constrain `r`: result boolean bit. 
+        // It equals `true` if `a` equals `b`, `false` otherwise
+
+        let r_value = match (a.get_value(), b.get_value()) {
+            (Some(a), Some(b))  => Some(a == b),
+            _                   => None,
+        };
+
+        let r = boolean::AllocatedBit::alloc(
+            cs.namespace(|| "r"), 
+            r_value
+        )?;
+
+        let delta = Self::alloc(
+            cs.namespace(|| "delta"), 
+            || {
+                let a_value = *a.get_value().get()?;
+                let b_value = *b.get_value().get()?;
+
+                let mut delta = a_value;
+                delta.sub_assign(&b_value);
+
+                Ok(delta)
+            }
+        )?;
+
+        // 
+        cs.enforce(
+            || "delta = (a - b)",
+            |lc| lc + a.get_variable() - b.get_variable(),
+            |lc| lc + CS::one(),
+            |lc| lc + delta.get_variable(),
+        );
+
+        let delta_inv = Self::alloc(
+            cs.namespace(|| "delta_inv"), 
+            || {
+                let delta = *delta.get_value().get()?;
+
+                if delta.is_zero() {
+                    Ok(E::Fr::one()) // we can return any number here, it doesn't matter
+                } else {
+                    Ok(delta.inverse().unwrap())
+                }
+            }
+        )?;
+
+        // Allocate `t = delta * delta_inv`
+        // If `delta` is non-zero (a != b), `t` will equal 1
+        // If `delta` is zero (a == b), `t` cannot equal 1
+
+        let t = Self::alloc(
+            cs.namespace(|| "t"),
+            || {
+                let mut tmp = *delta.get_value().get()?;
+                tmp.mul_assign(&(*delta_inv.get_value().get()?));
+
+                Ok(tmp)
+            }
+        
+        )?;
+
+        // Constrain allocation: 
+        // t = (a - b) * delta_inv
+        cs.enforce(
+            || "t = (a - b) * delta_inv",
+            |lc| lc + a.get_variable() - b.get_variable(),
+            |lc| lc + delta_inv.get_variable(),
+            |lc| lc + t.get_variable(),
+        );
+
+        // Constrain: 
+        // (a - b) * (t - 1) == 0
+        // This enforces that correct `delta_inv` was provided, 
+        // and thus `t` is 1 if `(a - b)` is non zero (a != b )
+        cs.enforce(
+            || "(a - b) * (t - 1) == 0",
+            |lc| lc + a.get_variable() - b.get_variable(),
+            |lc| lc + t.get_variable() - CS::one(),
+            |lc| lc
+        );
+
+        // Constrain: 
+        // (a - b) * r == 0
+        // This enforces that `r` is zero if `(a - b)` is non-zero (a != b)
+        cs.enforce(
+            || "(a - b) * r == 0",
+            |lc| lc + a.get_variable() - b.get_variable(),
+            |lc| lc + r.get_variable(),
+            |lc| lc
+        );
+
+        // Constrain: 
+        // (t - 1) * (r - 1) == 0
+        // This enforces that `r` is one if `t` is not one (a == b)
+        cs.enforce(
+            || "(t - 1) * (r - 1) == 0",
+            |lc| lc + t.get_variable() - CS::one(),
+            |lc| lc + r.get_variable() - CS::one(),
+            |lc| lc
+        );
+
+        Ok(boolean::Boolean::from(r))
+    }
+
     pub fn get_value(&self) -> Option<E::Fr> {
         self.value
     }
