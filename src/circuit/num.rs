@@ -910,6 +910,24 @@ mod test {
     }
 
     #[test]
+    fn test_num_equals() {
+        let mut cs = TestConstraintSystem::<Bls12>::new();
+
+        let a = AllocatedNum::alloc(cs.namespace(|| "a"), || Ok(Fr::from_str("10").unwrap())).unwrap();
+        let b = AllocatedNum::alloc(cs.namespace(|| "b"), || Ok(Fr::from_str("12").unwrap())).unwrap();
+        let c = AllocatedNum::alloc(cs.namespace(|| "c"), || Ok(Fr::from_str("10").unwrap())).unwrap();
+
+        let not_eq = AllocatedNum::equals(cs.namespace(|| "not_eq"), &a, &b).unwrap();
+        let eq = AllocatedNum::equals(cs.namespace(|| "eq"), &a, &c).unwrap();
+
+        assert!(cs.is_satisfied());
+        assert_eq!(cs.num_constraints(), 2 * 6);
+
+        assert_eq!(not_eq.get_value().unwrap(), false);
+        assert_eq!(eq.get_value().unwrap(), true);
+    }
+
+    #[test]
     fn test_num_nonzero() {
         {
             let mut cs = TestConstraintSystem::<Bls12>::new();
