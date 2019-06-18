@@ -19,18 +19,19 @@ pub fn generate_powers<E: Engine, CS>(
             }
         )?;
 
+        cs.enforce(
+            || "enforce 0-th power",
+            |lc| lc + power.get_variable(),
+            |lc| lc + CS::one(),
+            |lc| lc + CS::one(),
+        );
+
         result.push(power.clone());
 
         for i in 1..max_power {
-            power = num::AllocatedNum::alloc(
+            power = power.mul(
                 cs.namespace(|| format!("{}-th power", i)), 
-                || {
-                    let mut power = power.get_value().get()?.clone();
-                    let value = base.get_value().get()?.clone();
-                    power.mul_assign(&value);
-                    
-                    Ok(power)
-                }
+                &base
             )?;
 
             result.push(power.clone());
