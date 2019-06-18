@@ -207,6 +207,8 @@ impl<'a, E: JubjubEngine> MerkleTree<E> for PedersenHashTree<'a, E> {
             )?;
         }
 
+        self.root = cur.clone();
+
         Ok(cur)
     }
 
@@ -316,6 +318,8 @@ impl<'a, E: JubjubEngine> MerkleTree<E> for PedersenHashTree<'a, E> {
                 |lc| lc + cur_0.get_variable()
             );
         }
+
+        self.root = cur_1;
 
         Ok(cur_0)
     }
