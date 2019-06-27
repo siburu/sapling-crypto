@@ -26,6 +26,16 @@ impl Bn256PoseidonParams {
         Self::new_for_params::<H>(t, r_f, r_p, security_level)
     }
 
+    pub fn new_for_quartic_tree<H: GroupHasher>() -> Self {
+        // TODO: Number of round can be reduced
+        let t = 5u32;
+        let r_f = 8u32;
+        let r_p = 84u32;
+        let security_level = 126u32;
+
+        Self::new_for_params::<H>(t, r_f, r_p, security_level)
+    }
+
     pub fn new_for_params<H: GroupHasher>(t: u32, r_f: u32, r_p: u32, security_level: u32) -> Self {
         use byteorder::{WriteBytesExt, ReadBytesExt, BigEndian};
         use constants;
