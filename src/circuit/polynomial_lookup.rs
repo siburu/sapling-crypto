@@ -6,7 +6,7 @@ use super::*;
 pub fn generate_powers<E: Engine, CS>(
     mut cs: CS,
     base: &num::AllocatedNum<E>, 
-    max_power: usize
+    num_powers: usize
 ) -> Result<Vec<num::AllocatedNum<E>>, SynthesisError>
     where CS: ConstraintSystem<E>
     {
@@ -28,7 +28,7 @@ pub fn generate_powers<E: Engine, CS>(
 
         result.push(power.clone());
 
-        for i in 1..max_power {
+        for i in 1..num_powers {
             power = power.mul(
                 cs.namespace(|| format!("{}-th power", i)), 
                 &base
