@@ -132,7 +132,7 @@ impl Bn256PoseidonParams {
         Self {
             t: t,
             r_f: r_f,
-            r_p: r_f,
+            r_p: r_p,
             full_round_keys: full_round_constants,
             partial_round_keys: partial_round_constants,
             mds_matrix: mds_matrix,
@@ -182,6 +182,8 @@ impl PoseidonHashParams<bn256::Bn256> for Bn256PoseidonParams {
 mod test {
     use rand::{Rand, Rng, thread_rng};
     use bellman::pairing::bn256::{Bn256, Fr};
+    use bellman::pairing::ff::PrimeField;
+    use bellman::pairing::ff::Field;
     use super::Bn256PoseidonParams;
     use crate::poseidon::{poseidon_hash, PoseidonHashParams, PoseidonEngine};
     use crate::group_hash::BlakeHasher;
@@ -198,5 +200,30 @@ mod test {
         let input: Vec<Fr> = (0..params.t()).map(|_| rng.gen()).collect();
         let output = poseidon_hash::<Bn256>(&params, &input[..]);
         assert!(output.len() == 1);
+    }
+
+    #[test]
+    fn test_print_bn256_poseidon_params_for_quartic_tree() {
+        let params = Bn256PoseidonParams::new_for_quartic_tree::<BlakeHasher>();
+        println!("MSD");
+        for el in params.mds_matrix.iter() {
+            println!("{}", el);
+        }
+        println!("Partial rounds constants");
+        for el in params.partial_round_keys.iter() {
+            println!("{}", el);
+        }
+        println!("Full rounds constants");
+        for el in params.full_round_keys.iter() {
+            println!("{}", el);
+        }
+    }
+
+    #[test]
+    fn test_print_bn256_poseidon_params_for_quartic_tree_hash_empty_input() {
+        let params = Bn256PoseidonParams::new_for_quartic_tree::<BlakeHasher>();
+        let input = vec![Fr::zero(); 4];
+        let output = poseidon_hash::<Bn256>(&params, &input);
+        println!("{}", output[0]);
     }
 }

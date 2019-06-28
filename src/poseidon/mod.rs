@@ -158,8 +158,9 @@ pub fn poseidon_mimc<E: PoseidonEngine>(
     params: &E::Params,
     input: &[E::Fr]
 ) -> Vec<E::Fr> {
+    assert_eq!(input.len(), params.t() as usize);
     let mut state = input.to_vec();
-    let state_len = state.len();
+    let state_len = params.t() as usize;
 
     // we have to perform R_f -> R_p -> R_f
 
@@ -203,7 +204,6 @@ pub fn poseidon_mimc<E: PoseidonEngine>(
         for (row, el) in new_state.iter_mut().enumerate() {
             *el = scalar_product::<E>(& state[..], params.mds_matrix_row(row as u32));
         }
-
         state = new_state;
 
         round += 1;
@@ -225,7 +225,6 @@ pub fn poseidon_mimc<E: PoseidonEngine>(
         for (row, el) in new_state.iter_mut().enumerate() {
             *el = scalar_product::<E>(& state[..], params.mds_matrix_row(row as u32));
         }
-
         state = new_state;
 
         round += 1;
