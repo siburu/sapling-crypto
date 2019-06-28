@@ -100,11 +100,6 @@ impl<E: PoseidonEngine> QuinticSBox<E> {
     }
 }
 
-// pub fn poseidon_tree_hash<E: PoseidonEngine<SBox = QuinticSBox<E> >, CS>(
-//     mut cs: CS,
-//     elements: &[AllocatedNum<E>],
-//     params: &E::Params
-
 pub fn poseidon_hash<E: PoseidonEngine<SBox = QuinticSBox<E> >, CS>(
     mut cs: CS,
     input: &[AllocatedNum<E>],
@@ -311,6 +306,12 @@ fn poseidon_mimc_round<E: PoseidonEngine<SBox = QuinticSBox<E> >, CS>(
         round += 1;
     }
 
+    // up to this point we always made a well-formed LC that later was collapsed into
+    // a signel variable after non-linearity application
+    // now we need to make linear combinations of linear combinations, so basically make
+    // filtering and joining. It's actually possible to just separate MSD matrix into
+    // three in later optimizations
+
     // now we need to apply full SBox of the last full round, then do linear
     // transformation and add first round constants before going through partial rounds
     {
@@ -328,6 +329,9 @@ fn poseidon_mimc_round<E: PoseidonEngine<SBox = QuinticSBox<E> >, CS>(
 
         add_round_constants::<E, CS>(params, &mut linear_transformation_results[..], 0, false);
         state = linear_transformation_results;
+
+        // up to this point linear combinations are well-formed and have number
+        // of terms equal to the number of variables in the state
 
         round += 1;
     }
@@ -462,7 +466,7 @@ mod test {
         let mut rng = XorShiftRng::from_seed([0x3dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
         let params = Bn256PoseidonParams::new::<BlakeHasher>();
         let input: Vec<Fr> = (0..params.t()).map(|_| rng.gen()).collect();
-        let expected = poseidon::poseidon_hash::<Bn256>(&params, &input[..]);
+        let expected = poseidon::poseidon_mimc::<Bn256>(&params, &input[..]);
 
         {
             let mut cs = TestConstraintSystem::<Bn256>::new();
@@ -482,7 +486,7 @@ mod test {
             ).unwrap();
 
             assert!(cs.is_satisfied());
-            assert!(res.len() == 1);
+            assert!(res.len() == (params.t() as usize));
 
             assert_eq!(res[0].get_value().unwrap(), expected[0]);
         }
