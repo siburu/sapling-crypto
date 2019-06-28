@@ -778,9 +778,30 @@ impl<E: Engine> Num<E> {
 
         self.value = newval;
         let mut lc = LinearCombination::zero();
-        std::mem::swap(&mut self.lc, &mut lc);
+        // std::mem::swap(&mut self.lc, &mut lc);
+        use std::collections::HashMap;
+        let mut final_coeffs: HashMap<bellman::Variable, E::Fr> = HashMap::new();
+        for (var, coeff) in self.lc.as_ref() {
+            if final_coeffs.get(var).is_some() {
+                if let Some(existing_coeff) = final_coeffs.get_mut(var) {
+                    existing_coeff.add_assign(&coeff);
+                } 
+            } else {
+                final_coeffs.insert(*var, *coeff);
+            }
+        }
+
         for (var, coeff) in other.lc.as_ref() {
-            lc = lc + (*coeff, var.clone());
+            if final_coeffs.get(var).is_some() {
+                if let Some(existing_coeff) = final_coeffs.get_mut(var) {
+                    existing_coeff.add_assign(&coeff);
+                }
+            } else {
+                final_coeffs.insert(*var, *coeff);
+            }
+        }
+        for (var, coeff) in final_coeffs.into_iter() {
+            lc = lc + (coeff, var);
         }
         self.lc = lc;
     }
