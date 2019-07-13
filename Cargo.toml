@@ -14,7 +14,8 @@ crate-type = ["lib", "staticlib"]
 
 [features]
 default = ["multicore"]
-multicore = ["bellman_ce/multicore"]
+multicore = ["bellman/multicore"]
+nightly = ["bellman/nightly"]
  
 [dependencies]
 rand = "0.4"
@@ -25,8 +26,8 @@ serde_derive = "1.0.80"
 tiny-keccak = "1.4.2"
 rust-crypto = "0.2"
 
-bellman_ce = { path = "../bellman"}
-#bellman_ce = { version = "0.3.0", default-features = false}
+#bellman = {package = "bellman_ce", path = "../bellman"}
+bellman = {package = "bellman_ce", version = "0.3.1", default-features = false}
 blake2-rfc_bellman_edition = "0.0.1"
 
 [dev-dependencies]
