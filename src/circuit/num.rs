@@ -487,6 +487,122 @@ impl<E: Engine> AllocatedNum<E> {
         Ok(())
     }
 
+    /// Takes two allocated numbers (a, b) and returns
+    /// allocated boolean variable with value `true`
+    /// if the `a` and `b` are equal, `false` otherwise.
+    pub fn equals<CS>(
+        mut cs: CS,
+        a: &Self,
+        b: &Self
+    ) -> Result<boolean::Boolean, SynthesisError>
+        where E: Engine,
+            CS: ConstraintSystem<E>
+    {
+        // Allocate and constrain `r`: result boolean bit. 
+        // It equals `true` if `a` equals `b`, `false` otherwise
+
+        let r_value = match (a.get_value(), b.get_value()) {
+            (Some(a), Some(b))  => Some(a == b),
+            _                   => None,
+        };
+
+        let r = boolean::AllocatedBit::alloc(
+            cs.namespace(|| "r"), 
+            r_value
+        )?;
+
+        let delta = Self::alloc(
+            cs.namespace(|| "delta"), 
+            || {
+                let a_value = *a.get_value().get()?;
+                let b_value = *b.get_value().get()?;
+
+                let mut delta = a_value;
+                delta.sub_assign(&b_value);
+
+                Ok(delta)
+            }
+        )?;
+
+        // 
+        cs.enforce(
+            || "delta = (a - b)",
+            |lc| lc + a.get_variable() - b.get_variable(),
+            |lc| lc + CS::one(),
+            |lc| lc + delta.get_variable(),
+        );
+
+        let delta_inv = Self::alloc(
+            cs.namespace(|| "delta_inv"), 
+            || {
+                let delta = *delta.get_value().get()?;
+
+                if delta.is_zero() {
+                    Ok(E::Fr::one()) // we can return any number here, it doesn't matter
+                } else {
+                    Ok(delta.inverse().unwrap())
+                }
+            }
+        )?;
+
+        // Allocate `t = delta * delta_inv`
+        // If `delta` is non-zero (a != b), `t` will equal 1
+        // If `delta` is zero (a == b), `t` cannot equal 1
+
+        let t = Self::alloc(
+            cs.namespace(|| "t"),
+            || {
+                let mut tmp = *delta.get_value().get()?;
+                tmp.mul_assign(&(*delta_inv.get_value().get()?));
+
+                Ok(tmp)
+            }
+        
+        )?;
+
+        // Constrain allocation: 
+        // t = (a - b) * delta_inv
+        cs.enforce(
+            || "t = (a - b) * delta_inv",
+            |lc| lc + a.get_variable() - b.get_variable(),
+            |lc| lc + delta_inv.get_variable(),
+            |lc| lc + t.get_variable(),
+        );
+
+        // Constrain: 
+        // (a - b) * (t - 1) == 0
+        // This enforces that correct `delta_inv` was provided, 
+        // and thus `t` is 1 if `(a - b)` is non zero (a != b )
+        cs.enforce(
+            || "(a - b) * (t - 1) == 0",
+            |lc| lc + a.get_variable() - b.get_variable(),
+            |lc| lc + t.get_variable() - CS::one(),
+            |lc| lc
+        );
+
+        // Constrain: 
+        // (a - b) * r == 0
+        // This enforces that `r` is zero if `(a - b)` is non-zero (a != b)
+        cs.enforce(
+            || "(a - b) * r == 0",
+            |lc| lc + a.get_variable() - b.get_variable(),
+            |lc| lc + r.get_variable(),
+            |lc| lc
+        );
+
+        // Constrain: 
+        // (t - 1) * (r - 1) == 0
+        // This enforces that `r` is one if `t` is not one (a == b)
+        cs.enforce(
+            || "(t - 1) * (r - 1) == 0",
+            |lc| lc + t.get_variable() - CS::one(),
+            |lc| lc + r.get_variable() - CS::one(),
+            |lc| lc
+        );
+
+        Ok(boolean::Boolean::from(r))
+    }
+
     pub fn get_value(&self) -> Option<E::Fr> {
         self.value
     }
@@ -510,6 +626,15 @@ impl<E: Engine> From<AllocatedNum<E>> for Num<E> {
     }
 }
 
+impl<E: Engine> Clone for Num<E> {
+    fn clone(&self) -> Self {
+        Num {
+            value: self.value,
+            lc: self.lc.clone()
+        }
+    }
+}
+
 impl<E: Engine> Num<E> {
     pub fn zero() -> Self {
         Num {
@@ -524,6 +649,21 @@ impl<E: Engine> Num<E> {
 
     pub fn lc(&self, coeff: E::Fr) -> LinearCombination<E> {
         LinearCombination::zero() + (coeff, &self.lc)
+    }
+
+    pub fn scale(&mut self, coeff: E::Fr) {
+        let newval = match self.value {
+            Some(mut curval) => {
+                curval.mul_assign(&coeff);
+
+                Some(curval)
+            },
+            _ => None
+        };
+
+        self.value = newval;
+        // TODO: Reword bellman to allow linear combinations to scale in-place
+        self.lc = LinearCombination::zero() + (coeff, &self.lc);
     }
 
     pub fn add_number_with_coeff(
@@ -572,6 +712,98 @@ impl<E: Engine> Num<E> {
             value: newval,
             lc: self.lc + &bit.lc(one, coeff)
         }
+    }
+
+    pub fn mut_add_number_with_coeff(
+        &mut self,
+        variable: &AllocatedNum<E>,
+        coeff: E::Fr
+    )
+    {
+        let newval = match (self.value, variable.get_value()) {
+            (Some(mut curval), Some(val)) => {
+                let mut tmp = val;
+                tmp.mul_assign(&coeff);
+
+                curval.add_assign(&tmp);
+
+                Some(curval)
+            },
+            _ => None
+        };
+
+        self.value = newval;
+        let mut lc = LinearCombination::zero();
+        std::mem::swap(&mut self.lc, &mut lc);
+        self.lc = lc + (coeff, variable.get_variable());
+    }
+
+    pub fn mut_add_bool_with_coeff(
+        &mut self,
+        one: Variable,
+        bit: &Boolean,
+        coeff: E::Fr
+    )
+    {
+        let newval = match (self.value, bit.get_value()) {
+            (Some(mut curval), Some(bval)) => {
+                if bval {
+                    curval.add_assign(&coeff);
+                }
+
+                Some(curval)
+            },
+            _ => None
+        };
+
+        self.value = newval;
+        let mut lc = LinearCombination::zero();
+        std::mem::swap(&mut self.lc, &mut lc);
+        self.lc = lc + &bit.lc(one, coeff);
+    }
+
+    pub fn add_assign(
+        &mut self,
+        other: &Self
+    )
+    {
+        let newval = match (self.value, other.get_value()) {
+            (Some(mut curval), Some(otherval)) => {
+                curval.add_assign(&otherval);
+
+                Some(curval)
+            },
+            _ => None
+        };
+
+        self.value = newval;
+        let mut lc = LinearCombination::zero();
+        // std::mem::swap(&mut self.lc, &mut lc);
+        use std::collections::HashMap;
+        let mut final_coeffs: HashMap<bellman::Variable, E::Fr> = HashMap::new();
+        for (var, coeff) in self.lc.as_ref() {
+            if final_coeffs.get(var).is_some() {
+                if let Some(existing_coeff) = final_coeffs.get_mut(var) {
+                    existing_coeff.add_assign(&coeff);
+                } 
+            } else {
+                final_coeffs.insert(*var, *coeff);
+            }
+        }
+
+        for (var, coeff) in other.lc.as_ref() {
+            if final_coeffs.get(var).is_some() {
+                if let Some(existing_coeff) = final_coeffs.get_mut(var) {
+                    existing_coeff.add_assign(&coeff);
+                }
+            } else {
+                final_coeffs.insert(*var, *coeff);
+            }
+        }
+        for (var, coeff) in final_coeffs.into_iter() {
+            lc = lc + (coeff, var);
+        }
+        self.lc = lc;
     }
 }
 
@@ -696,6 +928,24 @@ mod test {
             assert_eq!(a.value.unwrap(), c.value.unwrap());
             assert_eq!(b.value.unwrap(), d.value.unwrap());
         }
+    }
+
+    #[test]
+    fn test_num_equals() {
+        let mut cs = TestConstraintSystem::<Bls12>::new();
+
+        let a = AllocatedNum::alloc(cs.namespace(|| "a"), || Ok(Fr::from_str("10").unwrap())).unwrap();
+        let b = AllocatedNum::alloc(cs.namespace(|| "b"), || Ok(Fr::from_str("12").unwrap())).unwrap();
+        let c = AllocatedNum::alloc(cs.namespace(|| "c"), || Ok(Fr::from_str("10").unwrap())).unwrap();
+
+        let not_eq = AllocatedNum::equals(cs.namespace(|| "not_eq"), &a, &b).unwrap();
+        let eq = AllocatedNum::equals(cs.namespace(|| "eq"), &a, &c).unwrap();
+
+        assert!(cs.is_satisfied());
+        assert_eq!(cs.num_constraints(), 2 * 6);
+
+        assert_eq!(not_eq.get_value().unwrap(), false);
+        assert_eq!(eq.get_value().unwrap(), true);
     }
 
     #[test]

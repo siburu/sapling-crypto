@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-extern crate bellman_ce as bellman;
+pub extern crate bellman;
 extern crate blake2_rfc_bellman_edition as blake2_rfc;
 extern crate digest;
 extern crate rand;
@@ -31,6 +31,7 @@ pub mod util;
 pub mod eddsa;
 pub mod interpolation;
 pub mod as_waksman;
+pub mod poseidon;
 
 extern crate serde;
 #[macro_use]

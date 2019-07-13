@@ -17,7 +17,8 @@ pub mod baby_eddsa;
 pub mod float_point;
 pub mod polynomial_lookup;
 pub mod as_waksman;
-// pub mod shark_mimc;
+pub mod poseidon_hash;
+pub mod merkle;
 
 pub mod sapling;
 pub mod sprout;
@@ -26,12 +27,6 @@ use bellman::{
     SynthesisError
 };
 
-// TODO: This should probably be removed and we
-// should use existing helper methods on `Option`
-// for mapping with an error.
-/// This basically is just an extension to `Option`
-/// which allows for a convenient mapping to an
-/// error on `None`.
 pub trait Assignment<T> {
     fn get(&self) -> Result<&T, SynthesisError>;
 }
