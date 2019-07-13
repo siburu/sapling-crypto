@@ -6,7 +6,7 @@ homepage = "https://github.com/matter-labs/sapling-crypto"
 license = "MIT/Apache-2.0"
 name = "sapling-crypto_ce"
 repository = "https://github.com/matter-labs/sapling-crypto"
-version = "0.0.6"
+version = "0.1.0"
 #edition = "2018"
 
 [lib]
@@ -21,10 +21,10 @@ nightly = ["bellman/nightly"]
 rand = "0.4"
 digest = "0.7"
 byteorder = "1"
-serde = "1.0.80"
-serde_derive = "1.0.80"
 tiny-keccak = "1.4.2"
 rust-crypto = "0.2"
+serde = "1.0.80"
+serde_derive = "1.0.80"
 
 #bellman = {package = "bellman_ce", path = "../bellman"}
 bellman = {package = "bellman_ce", version = "0.3.1", default-features = false}
