@@ -16,15 +16,16 @@ crate-type = ["lib", "staticlib"]
 default = ["multicore"]
 multicore = ["bellman/multicore"]
 nightly = ["bellman/nightly"]
+wasm = ["bellman/wasm"]
  
 [dependencies]
 rand = "0.4"
 digest = "0.7"
 byteorder = "1"
 tiny-keccak = "1.4.2"
-rust-crypto = "0.2"
 serde = "1.0.80"
 serde_derive = "1.0.80"
+sha2 = "0.8.0"
 
 #bellman = {package = "bellman_ce", path = "../bellman"}
 bellman = {package = "bellman_ce", version = "0.3.1", default-features = false}
