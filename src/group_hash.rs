@@ -8,7 +8,7 @@ use bellman::pairing::ff::{
     PrimeField
 };
 
-use tiny_keccak::Keccak;
+use tiny_keccak::{Keccak, Hasher};
 use blake2_rfc::blake2s::Blake2s;
 use constants;
 
@@ -53,7 +53,7 @@ pub struct Keccak256Hasher {
 
 impl GroupHasher for Keccak256Hasher {
     fn new(personalization: &[u8]) -> Self {
-        let mut h = Keccak::new_keccak256();
+        let mut h = Keccak::v256();
         h.update(personalization);
 
         Self {
@@ -68,7 +68,7 @@ impl GroupHasher for Keccak256Hasher {
     fn finalize(&mut self) -> Vec<u8> {
         use std::mem;
 
-        let new_h = Keccak::new_keccak256();
+        let new_h = Keccak::v256();
         let h = std::mem::replace(&mut self.h, new_h);
 
         let mut res: [u8; 32] = [0; 32];
