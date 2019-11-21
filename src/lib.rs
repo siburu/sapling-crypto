@@ -1,9 +1,12 @@
+// #![feature(const_fn)]
+
 #![allow(unused_imports)]
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
 pub extern crate bellman;
-extern crate blake2_rfc_bellman_edition as blake2_rfc;
+extern crate blake2s_simd;
+extern crate blake2b_simd;
 extern crate digest;
 extern crate rand;
 extern crate byteorder;

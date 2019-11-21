@@ -481,7 +481,7 @@ impl Boolean {
     }
 
     /// Construct a boolean from a known constant
-    pub fn constant(b: bool) -> Self {
+    pub const fn constant(b: bool) -> Self {
         Boolean::Constant(b)
     }
 
@@ -834,7 +834,7 @@ mod test {
     use bellman::{ConstraintSystem};
     use bellman::pairing::bls12_381::{Bls12, Fr};
     use bellman::pairing::ff::{Field, PrimeField};
-    use ::circuit::test::*;
+    use crate::circuit::test::*;
     use super::{
         AllocatedBit,
         Boolean,

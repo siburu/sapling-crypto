@@ -322,11 +322,11 @@ pub fn blake2s<E: Engine, CS: ConstraintSystem<E>>(
 mod test {
     use rand::{XorShiftRng, SeedableRng, Rng};
     use bellman::pairing::bls12_381::{Bls12};
-    use ::circuit::boolean::{Boolean, AllocatedBit};
-    use ::circuit::test::TestConstraintSystem;
+    use crate::circuit::boolean::{Boolean, AllocatedBit};
+    use crate::circuit::test::TestConstraintSystem;
     use super::blake2s;
     use bellman::{ConstraintSystem};
-    use blake2_rfc::blake2s::Blake2s;
+    use blake2s_simd;
 
     #[test]
     fn test_blank_hash() {
@@ -342,7 +342,7 @@ mod test {
         let expected = hex!("c59f682376d137f3f255e671e207d1f2374ebe504e9314208a52d9f88d69e8c8");
 
         let mut out = out.into_iter();
-        for b in expected.into_iter() {
+        for b in expected.iter() {
             for i in 0..8 {
                 let c = out.next().unwrap().get_value().unwrap();
 
@@ -392,13 +392,15 @@ mod test {
 
         for input_len in (0..32).chain((32..256).filter(|a| a % 8 == 0))
         {
-            let mut h = Blake2s::with_params(32, &[], &[], b"12345678");
+            let mut h = blake2s_simd::Params::new().hash_length(32).personal(b"12345678").to_state();
+            // let mut h = Blake2s::with_params(32, &[], &[], b"12345678");
 
             let data: Vec<u8> = (0..input_len).map(|_| rng.gen()).collect();
 
             h.update(&data);
 
-            let hash_result = h.finalize();
+            // let hash_result = h.finalize();
+            let hash_result = *h.finalize().as_array();
 
             let mut cs = TestConstraintSystem::<Bls12>::new();
 

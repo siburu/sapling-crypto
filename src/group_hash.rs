@@ -1,4 +1,4 @@
-use jubjub::{
+use crate::jubjub::{
     JubjubEngine,
     PrimeOrder,
     edwards
@@ -9,8 +9,9 @@ use bellman::pairing::ff::{
 };
 
 use tiny_keccak::{Keccak, Hasher};
-use blake2_rfc::blake2s::Blake2s;
-use constants;
+// use blake2_rfc::blake2s::Blake2s;
+use blake2s_simd;
+use crate::constants;
 
 pub trait GroupHasher {
     fn new(personalization: &[u8]) -> Self;
@@ -19,12 +20,13 @@ pub trait GroupHasher {
 }
 
 pub struct BlakeHasher {
-    h: Blake2s
+    h: blake2s_simd::State
 }
 
 impl GroupHasher for BlakeHasher {
     fn new(personalization: &[u8]) -> Self {
-        let h = Blake2s::with_params(32, &[], &[], personalization);
+        let h = blake2s_simd::Params::new().hash_length(32).personal(personalization).to_state();
+        // let h = Blake2s::with_params(32, &[], &[], personalization);
 
         Self {
             h: h
@@ -38,12 +40,17 @@ impl GroupHasher for BlakeHasher {
     fn finalize(&mut self) -> Vec<u8> {
         use std::mem;
 
-        let new_h = Blake2s::with_params(32, &[], &[], &[]);
+        let new_h = blake2s_simd::Params::new().hash_length(32).to_state();
+        // let new_h = Blake2s::with_params(32, &[], &[], &[]);
         let h = std::mem::replace(&mut self.h, new_h);
 
         let result = h.finalize();
 
-        result.as_ref().to_vec().clone()
+        self.h.update(&result.as_bytes());
+
+        result.as_bytes().to_vec()
+
+        // result.as_ref().to_vec().clone()
     }
 }
 
@@ -92,10 +99,12 @@ pub fn group_hash<E: JubjubEngine>(
     // Check to see that scalar field is 255 bits
     assert!(E::Fr::NUM_BITS == 255);
 
-    let mut h = Blake2s::with_params(32, &[], &[], personalization);
+    let mut h = blake2s_simd::Params::new().hash_length(32).personal(personalization).to_state();
+    // let mut h = Blake2s::with_params(32, &[], &[], personalization);
     h.update(constants::GH_FIRST_BLOCK);
     h.update(tag);
-    let h = h.finalize().as_ref().to_vec();
+    let h = *h.finalize().as_array();
+    // let h = h.finalize().as_ref().to_vec();
     assert!(h.len() == 32);
 
     match edwards::Point::<E, _>::read(&h[..], params) {
@@ -126,10 +135,13 @@ pub fn baby_group_hash<E: JubjubEngine>(
     // Check to see that scalar field is 255 bits
     assert!(E::Fr::NUM_BITS == 254);
 
-    let mut h = Blake2s::with_params(32, &[], &[], personalization);
+    let mut h = blake2s_simd::Params::new().hash_length(32).personal(personalization).to_state();
+
+    // let mut h = Blake2s::with_params(32, &[], &[], personalization);
     h.update(constants::GH_FIRST_BLOCK);
     h.update(tag);
-    let h = h.finalize().as_ref().to_vec();
+    // let h = h.finalize().as_ref().to_vec();
+    let h = *h.finalize().as_array();
     assert!(h.len() == 32);
 
     match edwards::Point::<E, _>::read(&h[..], params) {
@@ -183,8 +195,8 @@ pub fn generic_group_hash<E: JubjubEngine, H: GroupHasher>(
 #[test]
 fn test_generic_hash() {
     use bellman::pairing::bn256::Bn256;
-    use alt_babyjubjub::JubjubEngine;
-    use alt_babyjubjub::AltJubjubBn256;
+    use crate::alt_babyjubjub::JubjubEngine;
+    use crate::alt_babyjubjub::AltJubjubBn256;
 
     let personalization = b"Hello123";
     let params = AltJubjubBn256::new();
@@ -199,8 +211,8 @@ fn test_generic_hash() {
 #[test]
 fn test_export_blake_generators() {
     use bellman::pairing::bn256::Bn256;
-    use alt_babyjubjub::JubjubEngine;
-    use alt_babyjubjub::AltJubjubBn256;
+    use crate::alt_babyjubjub::JubjubEngine;
+    use crate::alt_babyjubjub::AltJubjubBn256;
 
     let personalization = b"Hello123";
     let params = AltJubjubBn256::new();
@@ -216,10 +228,11 @@ fn test_export_blake_generators() {
 fn blake2s_consistency_test() {
     let personalization = b"Hello_w!";
     let tag = b"World_123!";
-    let mut h = Blake2s::with_params(32, &[], &[], personalization);
+    let mut h = blake2s_simd::Params::new().hash_length(32).personal(personalization).to_state();
+    // let mut h = Blake2s::with_params(32, &[], &[], personalization);
     h.update(constants::GH_FIRST_BLOCK);
     h.update(tag);
-    let h = h.finalize().as_ref().to_vec();
+    let h = *h.finalize().as_array();
     let reference = hex!("989e1d96f8d977db95b7fcb59d26fe7f66b4e21e84cdb9387b67aa78ebd07ecf");
 
     assert_eq!(reference[..], h[..]);

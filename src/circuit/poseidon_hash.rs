@@ -454,7 +454,7 @@ fn print_nums<E: Engine>(input: &[AllocatedNum<E>]) {
 mod test {
     use rand::{SeedableRng, Rng, XorShiftRng};
     use super::*;
-    use ::circuit::test::*;
+    use crate::circuit::test::*;
     use bellman::pairing::bn256::{Bn256, Fr};
     use bellman::pairing::ff::PrimeField;
     use crate::poseidon;

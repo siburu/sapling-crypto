@@ -416,13 +416,13 @@ impl UInt32 {
 #[cfg(test)]
 mod test {
     use rand::{XorShiftRng, SeedableRng, Rng};
-    use ::circuit::boolean::{Boolean};
+    use crate::circuit::boolean::{Boolean};
     use super::{UInt32};
     use bellman::pairing::bls12_381::{Bls12};
     use bellman::pairing::ff::{Field};
-    use ::circuit::test::*;
+    use crate::circuit::test::*;
     use bellman::{ConstraintSystem};
-    use circuit::multieq::MultiEq;
+    use crate::circuit::multieq::MultiEq;
 
     #[test]
     fn test_uint32_from_bits_be() {

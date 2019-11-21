@@ -28,23 +28,14 @@
 //! the Montgomery curve forms a group isomorphism, allowing points
 //! to be freely converted between the two forms.
 
-// use ::jubjub::{
-//     Unknown,
-//     PrimeOrder,
-//     FixedGenerators,
-//     ToUniform,
-//     JubjubEngine,
-//     JubjubParams,
-// };
-
 use bellman::pairing::ff::{
     Field,
     PrimeField,
 };
 
-use group_hash::{baby_group_hash, generic_group_hash};
+use crate::group_hash::{baby_group_hash, generic_group_hash};
 
-use constants;
+use crate::constants;
 
 use bellman::pairing::bn256::{
     Bn256,

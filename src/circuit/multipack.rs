@@ -125,7 +125,7 @@ fn test_multipacking() {
     use rand::{SeedableRng, Rng, XorShiftRng};
     use bellman::{ConstraintSystem};
     use bellman::pairing::bls12_381::{Bls12};
-    use ::circuit::test::*;
+    use crate::circuit::test::*;
     use super::boolean::{AllocatedBit, Boolean};
 
     let mut rng = XorShiftRng::from_seed([0x3dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);

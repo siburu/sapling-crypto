@@ -38,7 +38,7 @@ impl Bn256PoseidonParams {
 
     pub fn new_for_params<H: GroupHasher>(t: u32, r_f: u32, r_p: u32, security_level: u32) -> Self {
         use byteorder::{WriteBytesExt, ReadBytesExt, BigEndian};
-        use constants;
+        use crate::constants;
 
         // generate round constants based on some seed and hashing
         let full_round_constants = {

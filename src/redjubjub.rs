@@ -5,8 +5,8 @@ use bellman::pairing::ff::{Field, PrimeField, PrimeFieldRepr};
 use rand::{Rng, Rand};
 use std::io::{self, Read, Write};
 
-use jubjub::{FixedGenerators, JubjubEngine, JubjubParams, Unknown, edwards::Point};
-use util::{hash_to_scalar};
+use crate::jubjub::{FixedGenerators, JubjubEngine, JubjubParams, Unknown, edwards::Point};
+use crate::util::{hash_to_scalar};
 
 fn read_scalar<E: JubjubEngine, R: Read>(reader: R) -> io::Result<E::Fs> {
     let mut s_repr = <E::Fs as PrimeField>::Repr::default();
@@ -208,7 +208,7 @@ mod tests {
     use bellman::pairing::bls12_381::Bls12;
     use rand::thread_rng;
 
-    use jubjub::{JubjubBls12, fs::Fs, edwards};
+    use crate::jubjub::{JubjubBls12, fs::Fs, edwards};
 
     use super::*;
 
@@ -348,7 +348,7 @@ mod baby_tests {
     use bellman::pairing::bn256::Bn256;
     use rand::thread_rng;
 
-    use alt_babyjubjub::{AltJubjubBn256, fs::Fs, edwards, FixedGenerators};
+    use crate::alt_babyjubjub::{AltJubjubBn256, fs::Fs, edwards, FixedGenerators};
 
     use super::*;
 

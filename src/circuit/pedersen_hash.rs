@@ -4,12 +4,12 @@ use super::ecc::{
     EdwardsPoint
 };
 use super::boolean::Boolean;
-use ::jubjub::*;
+use crate::jubjub::*;
 use bellman::{
     ConstraintSystem
 };
 use super::lookup::*;
-pub use pedersen_hash::Personalization;
+pub use crate::pedersen_hash::Personalization;
 
 impl Personalization {
     fn get_constant_bools(&self) -> Vec<Boolean> {
@@ -114,8 +114,8 @@ pub fn pedersen_hash<E: JubjubEngine, CS>(
 mod test {
     use rand::{SeedableRng, Rng, XorShiftRng};
     use super::*;
-    use ::circuit::test::*;
-    use ::circuit::boolean::{Boolean, AllocatedBit};
+    use crate::circuit::test::*;
+    use crate::circuit::boolean::{Boolean, AllocatedBit};
     use bellman::pairing::bls12_381::{Bls12, Fr};
     use bellman::pairing::ff::PrimeField;
 
@@ -170,7 +170,7 @@ mod test {
 
                 assert!(cs.is_satisfied());
 
-                let expected = ::pedersen_hash::pedersen_hash::<Bls12, _>(
+                let expected = crate::pedersen_hash::pedersen_hash::<Bls12, _>(
                     Personalization::MerkleTree(1),
                     input.clone().into_iter(),
                     params
@@ -180,7 +180,7 @@ mod test {
                 assert_eq!(res.get_y().get_value().unwrap(), expected.1);
 
                 // Test against the output of a different personalization
-                let unexpected = ::pedersen_hash::pedersen_hash::<Bls12, _>(
+                let unexpected = crate::pedersen_hash::pedersen_hash::<Bls12, _>(
                     Personalization::MerkleTree(0),
                     input.into_iter(),
                     params
@@ -197,11 +197,11 @@ mod test {
 mod baby_test {
     use rand::{SeedableRng, Rng, XorShiftRng};
     use super::*;
-    use ::circuit::test::*;
-    use ::circuit::boolean::{Boolean, AllocatedBit};
+    use crate::circuit::test::*;
+    use crate::circuit::boolean::{Boolean, AllocatedBit};
     use bellman::pairing::bn256::{Bn256, Fr};
     use bellman::pairing::ff::PrimeField;
-    use ::alt_babyjubjub::{AltJubjubBn256};
+    use crate::alt_babyjubjub::{AltJubjubBn256};
 
     #[test]
     fn test_baby_pedersen_hash_constraints() {
@@ -254,7 +254,7 @@ mod baby_test {
 
                 assert!(cs.is_satisfied());
 
-                let expected = ::pedersen_hash::pedersen_hash::<Bn256, _>(
+                let expected = crate::pedersen_hash::pedersen_hash::<Bn256, _>(
                     Personalization::MerkleTree(0),
                     input.clone().into_iter(),
                     params
@@ -264,7 +264,7 @@ mod baby_test {
                 assert_eq!(res.get_y().get_value().unwrap(), expected.1);
 
                 // Test against the output of a different personalization
-                let unexpected = ::pedersen_hash::pedersen_hash::<Bn256, _>(
+                let unexpected = crate::pedersen_hash::pedersen_hash::<Bn256, _>(
                     Personalization::MerkleTree(1),
                     input.into_iter(),
                     params

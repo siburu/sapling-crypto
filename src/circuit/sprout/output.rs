@@ -1,6 +1,6 @@
 use bellman::pairing::{Engine};
 use bellman::{ConstraintSystem, SynthesisError};
-use circuit::boolean::{Boolean};
+use crate::circuit::boolean::{Boolean};
 
 use super::*;
 use super::prfs::*;

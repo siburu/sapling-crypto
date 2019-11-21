@@ -1,9 +1,9 @@
 use bellman::pairing::{Engine};
 use bellman::{ConstraintSystem, SynthesisError};
-use circuit::sha256::{
+use crate::circuit::sha256::{
     sha256_block_no_padding
 };
-use circuit::boolean::{
+use crate::circuit::boolean::{
     AllocatedBit,
     Boolean
 };
@@ -75,7 +75,7 @@ impl InputNote {
         // Witness into the merkle tree
         let mut cur = cm.clone();
 
-        for (i, layer) in auth_path.into_iter().enumerate() {
+        for (i, layer) in auth_path.iter().enumerate() {
             let cs = &mut cs.namespace(|| format!("layer {}", i));
 
             let cur_is_right = AllocatedBit::alloc(

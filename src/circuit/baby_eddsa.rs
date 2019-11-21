@@ -17,7 +17,7 @@ use super::num::{
     AllocatedNum,
 };
 
-use ::jubjub::{
+use crate::jubjub::{
     edwards,
     JubjubEngine,
     JubjubParams,
@@ -47,9 +47,9 @@ pub struct EddsaSignature<E: JubjubEngine> {
     pub pk: EdwardsPoint<E>
 }
 
-use ::alt_babyjubjub::{fs::Fs};
+use crate::alt_babyjubjub::{fs::Fs};
 
-use constants::{MATTER_EDDSA_BLAKE2S_PERSONALIZATION};
+use crate::constants::{MATTER_EDDSA_BLAKE2S_PERSONALIZATION};
 
 impl <E: JubjubEngine>EddsaSignature<E> {
 
@@ -332,14 +332,14 @@ impl <E: JubjubEngine>EddsaSignature<E> {
 
 #[cfg(test)]
 mod test {
-    use ::eddsa::{PrivateKey, PublicKey};
+    use crate::eddsa::{PrivateKey, PublicKey};
     use rand::{SeedableRng, Rng, XorShiftRng};
     use super::*;
-    use ::circuit::test::*;
-    use ::circuit::boolean::{Boolean, AllocatedBit};
+    use crate::circuit::test::*;
+    use crate::circuit::boolean::{Boolean, AllocatedBit};
     use bellman::pairing::bn256::{Bn256, Fr};
     use bellman::pairing::ff::{PrimeField, PrimeFieldRepr};
-    use ::alt_babyjubjub::AltJubjubBn256;
+    use crate::alt_babyjubjub::AltJubjubBn256;
     
     #[test]
     fn test_schnorr_signatures() {

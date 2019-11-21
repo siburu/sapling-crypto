@@ -14,14 +14,14 @@ use bellman::{
     Circuit
 };
 
-use jubjub::{
+use crate::jubjub::{
     JubjubEngine,
     FixedGenerators
 };
 
-use constants;
+use crate::constants;
 
-use primitives::{
+use crate::primitives::{
     ValueCommitment,
     ProofGenerationKey,
     PaymentAddress
@@ -607,8 +607,8 @@ fn test_input_circuit_with_bls12_381() {
     use bellman::pairing::ff::{Field, BitIterator};
     use bellman::pairing::bls12_381::*;
     use rand::{SeedableRng, Rng, XorShiftRng};
-    use ::circuit::test::*;
-    use jubjub::{JubjubBls12, fs, edwards};
+    use crate::circuit::test::*;
+    use crate::jubjub::{JubjubBls12, fs, edwards};
 
     let params = &JubjubBls12::new();
     let rng = &mut XorShiftRng::from_seed([0x3dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
@@ -624,7 +624,7 @@ fn test_input_circuit_with_bls12_381() {
         let nsk: fs::Fs = rng.gen();
         let ak = edwards::Point::rand(rng, params).mul_by_cofactor(params);
 
-        let proof_generation_key = ::primitives::ProofGenerationKey {
+        let proof_generation_key = crate::primitives::ProofGenerationKey {
             ak: ak.clone(),
             nsk: nsk.clone()
         };
@@ -634,7 +634,7 @@ fn test_input_circuit_with_bls12_381() {
         let payment_address;
 
         loop {
-            let diversifier = ::primitives::Diversifier(rng.gen());
+            let diversifier = crate::primitives::Diversifier(rng.gen());
 
             if let Some(p) = viewing_key.into_payment_address(
                 diversifier,
@@ -654,7 +654,7 @@ fn test_input_circuit_with_bls12_381() {
         {
             let rk = viewing_key.rk(ar, params).into_xy();
             let expected_value_cm = value_commitment.cm(params).into_xy();
-            let note = ::primitives::Note {
+            let note = crate::primitives::Note {
                 value: value_commitment.value,
                 g_d: g_d.clone(),
                 pk_d: payment_address.pk_d.clone(),
@@ -682,8 +682,8 @@ fn test_input_circuit_with_bls12_381() {
                 lhs.reverse();
                 rhs.reverse();
 
-                cur = ::pedersen_hash::pedersen_hash::<Bls12, _>(
-                    ::pedersen_hash::Personalization::MerkleTree(i),
+                cur = crate::pedersen_hash::pedersen_hash::<Bls12, _>(
+                    crate::pedersen_hash::Personalization::MerkleTree(i),
                     lhs.into_iter()
                        .take(Fr::NUM_BITS as usize)
                        .chain(rhs.into_iter().take(Fr::NUM_BITS as usize)),
@@ -739,8 +739,8 @@ fn test_output_circuit_with_bls12_381() {
     use bellman::pairing::ff::{Field};
     use bellman::pairing::bls12_381::*;
     use rand::{SeedableRng, Rng, XorShiftRng};
-    use ::circuit::test::*;
-    use jubjub::{JubjubBls12, fs, edwards};
+    use crate::circuit::test::*;
+    use crate::jubjub::{JubjubBls12, fs, edwards};
 
     let params = &JubjubBls12::new();
     let rng = &mut XorShiftRng::from_seed([0x3dbe6258, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
@@ -754,7 +754,7 @@ fn test_output_circuit_with_bls12_381() {
         let nsk: fs::Fs = rng.gen();
         let ak = edwards::Point::rand(rng, params).mul_by_cofactor(params);
 
-        let proof_generation_key = ::primitives::ProofGenerationKey {
+        let proof_generation_key = crate::primitives::ProofGenerationKey {
             ak: ak.clone(),
             nsk: nsk.clone()
         };
@@ -764,7 +764,7 @@ fn test_output_circuit_with_bls12_381() {
         let payment_address;
 
         loop {
-            let diversifier = ::primitives::Diversifier(rng.gen());
+            let diversifier = crate::primitives::Diversifier(rng.gen());
 
             if let Some(p) = viewing_key.into_payment_address(
                 diversifier,

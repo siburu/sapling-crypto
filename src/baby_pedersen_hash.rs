@@ -1,4 +1,4 @@
-use babyjubjub::*;
+use crate::babyjubjub::*;
 use bellman::pairing::ff::{Field, PrimeField, PrimeFieldRepr};
 
 #[derive(Copy, Clone)]

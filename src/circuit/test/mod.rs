@@ -24,7 +24,9 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::HashSet;
 
-use blake2_rfc::blake2s::Blake2s;
+use blake2s_simd;
+
+// use blake2_rfc::blake2s::Blake2s;
 
 #[derive(Debug)]
 enum NamedObject {
@@ -104,7 +106,7 @@ fn proc_lc<E: Engine>(
 
 fn hash_lc<E: Engine>(
     terms: &[(Variable, E::Fr)],
-    h: &mut Blake2s
+    h: &mut blake2s_simd::State
 )
 {
     let map = proc_lc::<E>(terms);
@@ -280,7 +282,7 @@ impl<E: Engine> TestConstraintSystem<E> {
     }
 
     pub fn hash(&self) -> String {
-        let mut h = Blake2s::new(32);
+        let mut h = blake2s_simd::Params::new().to_state();
         {
             let mut buf = [0u8; 24];
 

@@ -1,4 +1,4 @@
-use babyjubjub::{
+use crate::babyjubjub::{
     JubjubEngine,
     PrimeOrder,
     edwards
@@ -8,8 +8,9 @@ use bellman::pairing::ff::{
     PrimeField
 };
 
-use blake2_rfc::blake2s::Blake2s;
-use constants;
+use blake2s_simd;
+// use blake2_rfc::blake2s::Blake2s;
+use crate::constants;
 
 /// Produces a random point in the Jubjub curve.
 /// The point is guaranteed to be prime order
@@ -25,10 +26,11 @@ pub fn group_hash<E: JubjubEngine>(
     // Check to see that scalar field is 254 bits
     assert!(E::Fr::NUM_BITS == 254);
 
-    let mut h = Blake2s::with_params(32, &[], &[], personalization);
+    let mut h = blake2s_simd::Params::new().hash_length(32).personal(personalization).to_state();
+    // let mut h = Blake2s::with_params(32, &[], &[], personalization);
     h.update(constants::GH_FIRST_BLOCK);
     h.update(tag);
-    let h = h.finalize().as_ref().to_vec();
+    let h = *h.finalize().as_array();
     assert!(h.len() == 32);
 
     match edwards::Point::<E, _>::read(&h[..], params) {

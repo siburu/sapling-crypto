@@ -18,7 +18,7 @@ use super::num::{
     Num
 };
 
-use ::babyjubjub::{
+use crate::babyjubjub::{
     edwards,
     JubjubEngine,
     JubjubParams,
@@ -742,15 +742,15 @@ mod test {
     use rand::{XorShiftRng, SeedableRng, Rand, Rng};
     use bellman::pairing::bn256::{Bn256, Fr};
     use bellman::pairing::ff::{BitIterator, Field, PrimeField};
-    use ::circuit::test::*;
-    use ::babyjubjub::{
+    use crate::circuit::test::*;
+    use crate::babyjubjub::{
         montgomery,
         edwards,
         JubjubBn256,
         JubjubParams,
         FixedGenerators
     };
-    use ::babyjubjub::fs::Fs;
+    use crate::babyjubjub::fs::Fs;
     use super::{
         MontgomeryPoint,
         EdwardsPoint,

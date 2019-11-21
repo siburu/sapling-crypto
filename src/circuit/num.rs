@@ -422,7 +422,7 @@ impl<E: Engine> AllocatedNum<E> {
         a: &Self,
         b: &Self,
         condition: &Boolean
-    ) -> Result<(Self), SynthesisError>
+    ) -> Result<Self, SynthesisError>
         where CS: ConstraintSystem<E>
     {
         let c = Self::alloc(
@@ -813,7 +813,7 @@ mod test {
     use bellman::{ConstraintSystem};
     use bellman::pairing::bls12_381::{Bls12, Fr};
     use bellman::pairing::ff::{Field, PrimeField, BitIterator};
-    use ::circuit::test::*;
+    use crate::circuit::test::*;
     use super::{AllocatedNum, Boolean};
 
     #[test]

@@ -1,4 +1,4 @@
-use jubjub::*;
+use crate::jubjub::*;
 use bellman::pairing::ff::{Field, PrimeField, PrimeFieldRepr};
 
 #[derive(Copy, Clone)]
@@ -102,7 +102,7 @@ pub fn pedersen_hash<E, I>(
     result
 }
 
-use alt_babyjubjub::{AltJubjubBn256};
+use crate::alt_babyjubjub::{AltJubjubBn256};
 
 pub fn baby_pedersen_hash<E, I>(
     personalization: Personalization,

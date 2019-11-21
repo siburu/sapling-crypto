@@ -1,11 +1,11 @@
 use bellman::pairing::{Engine};
 use bellman::pairing::ff::{Field};
 use bellman::{ConstraintSystem, SynthesisError, Circuit, LinearCombination};
-use circuit::boolean::{
+use crate::circuit::boolean::{
     AllocatedBit,
     Boolean
 };
-use circuit::multipack::pack_into_inputs;
+use crate::circuit::multipack::pack_into_inputs;
 
 mod prfs;
 mod commitment;
@@ -355,7 +355,7 @@ fn witness_u252<E, CS>(
 #[test]
 fn test_sprout_constraints() {
     use bellman::pairing::bls12_381::{Bls12};
-    use ::circuit::test::*;
+    use crate::circuit::test::*;
 
     use byteorder::{WriteBytesExt, ReadBytesExt, LittleEndian};
 
@@ -479,7 +479,7 @@ fn test_sprout_constraints() {
         expected_inputs.write_u64::<LittleEndian>(vpub_old.unwrap()).unwrap();
         expected_inputs.write_u64::<LittleEndian>(vpub_new.unwrap()).unwrap();
 
-        use circuit::multipack;
+        use crate::circuit::multipack;
 
         let expected_inputs = multipack::bytes_to_bits(&expected_inputs);
         let expected_inputs = multipack::compute_multipacking::<Bls12>(&expected_inputs);

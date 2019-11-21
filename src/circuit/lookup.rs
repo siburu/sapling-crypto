@@ -197,8 +197,8 @@ pub fn lookup3_xy_with_conditional_negation<E: Engine, CS>(
 mod test {
     use rand::{SeedableRng, Rand, Rng, XorShiftRng};
     use super::*;
-    use ::circuit::test::*;
-    use ::circuit::boolean::{Boolean, AllocatedBit};
+    use crate::circuit::test::*;
+    use crate::circuit::boolean::{Boolean, AllocatedBit};
     use bellman::pairing::bls12_381::{Bls12, Fr};
 
     #[test]

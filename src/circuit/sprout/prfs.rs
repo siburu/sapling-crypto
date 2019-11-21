@@ -1,9 +1,9 @@
 use bellman::pairing::{Engine};
 use bellman::{ConstraintSystem, SynthesisError};
-use circuit::sha256::{
+use crate::circuit::sha256::{
     sha256_block_no_padding
 };
-use circuit::boolean::{
+use crate::circuit::boolean::{
     Boolean
 };
 
