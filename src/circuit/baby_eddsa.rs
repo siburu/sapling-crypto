@@ -63,10 +63,7 @@ impl <E: JubjubEngine>EddsaSignature<E> {
         where CS: ConstraintSystem<E>
     {
         // TODO check that s < Fs::Char
-        let scalar_bits = field_into_boolean_vec_le(
-            cs.namespace(|| "Get S bits"),
-            self.s.get_value()
-        )?;
+        let scalar_bits = self.s.into_bits_le(cs.namespace(|| "Get S bits"))?;
 
         let sb = generator.mul(
             cs.namespace(|| "S*B computation"),
